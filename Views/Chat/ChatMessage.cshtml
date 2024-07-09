@@ -1,0 +1,470 @@
+﻿@model Dialogix.Models.ChatMessage
+@{
+    ViewData["Title"] = "ChatMessage";
+    dynamic lstChatRecordwithConnections = ViewBag.lstChatRecordConnections as IEnumerable<Dialogix.Models.ChatMessage>;
+}
+
+@* Display Success Message Using Toastr *@
+@if (TempData["successMessage"] != null)
+{
+    <script>
+        toastr.success("@TempData["successMessage"]");
+    </script>
+}
+
+<style>
+    /* Reset and Global Styles */
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body, html {
+        height: 100%;
+        font-family: Arial, sans-serif;
+        background-color: var(--background-color);
+        color: var(--text-color);
+    }
+
+    :root {
+        --background-color: #ffffff;
+        --text-color: #000000;
+    }
+
+    [data-theme='dark'] {
+        --background-color: #121212;
+        --text-color: #ffffff;
+    }
+
+    /* Layout and Container Styles */
+    .container {
+        display: flex;
+        flex-direction: row;
+        height: 100vh;
+    }
+
+    .main-container {
+        display: flex;
+        width: 100%;
+    }
+
+    .left-panel {
+        flex: 0.3;
+        background-image: url('../images/svg1.svg');
+        background-size: cover;
+        background-position: center;
+    }
+
+    .chat-container {
+        flex: 0.7;
+        display: flex;
+        flex-direction: column;
+        padding: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        overflow-y: auto;
+    }
+
+    /* Chat Header */
+    .chat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #44426e;
+        color: white;
+        padding: 10px;
+    }
+
+    .settings-container {
+        position: relative;
+    }
+
+    .settings-button {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+    }
+
+    .settings-dropdown {
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: white;
+        border-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        z-index: 1;
+    }
+
+    .settings-container:hover .settings-dropdown {
+        display: block;
+    }
+
+    .settings-dropdown ul {
+        list-style-type: none;
+        padding: 10px;
+        margin: 0;
+    }
+
+    .settings-dropdown li {
+        padding: 5px 10px;
+    }
+
+        .settings-dropdown li a {
+            text-decoration: none;
+            color: black;
+        }
+
+        .settings-dropdown li:hover {
+            background-color: #f1f1f1;
+        }
+
+    /* Chat Messages */
+    .chat-messages {
+        flex-grow: 1;
+        padding: 10px;
+        overflow-y: auto;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .message {
+        max-width: 70%;
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+    .sent {
+        background-color: #e0ffe0;
+        align-self: flex-start;
+    }
+
+    .received {
+        background-color: #e0f7fa;
+        align-self: flex-end;
+    }
+
+    .Historysent {
+        background-color: #e0ffe0;
+        align-self: flex-start;
+    }
+
+    .Historyreceived {
+        background-color: #e0f7fa;
+        align-self: flex-end;
+    }
+
+    .alignHistorySent {
+        display: flex;
+        justify-content: end;
+        align-items: center;
+    }
+
+    .alignHistoryRight {
+        display: flex;
+    }
+
+    /* Chat Input Section */
+    .chat-input-container {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+    }
+
+        .chat-input-container input[type='text'] {
+            flex-grow: 1;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .chat-input-container input[type='file'] {
+            margin-right: 10px;
+        }
+
+    #cameraButton {
+        background: none;
+        border: none;
+    }
+
+    #sendButton {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+    }
+
+        #sendButton:hover {
+            background-color: #0056b3;
+        }
+
+    /* Profile Section */
+    .profile-section {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        justify-content: space-between;
+    }
+
+    .profile-photo {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+
+    .profile-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .online-dot {
+        width: 10px;
+        height: 10px;
+        background-color: green;
+        border-radius: 50%;
+        margin-bottom: 5px;
+    }
+
+    .last-seen {
+        font-size: 12px;
+        color: gray;
+    }
+
+    /* Responsive Styles */
+    @@media (max-width: 768px) {
+        .main-container {
+            flex-direction: column;
+        }
+
+        .left-panel {
+            display: none;
+        }
+
+        .chat-container {
+            flex: 1;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .chat-input-container {
+            flex-direction: column;
+            align-items: stretch;
+            margin-bottom: 10px;
+        }
+
+            .chat-input-container input[type='text'],
+            .chat-input-container input[type='file'],
+            #sendButton {
+                width: 100%;
+                margin-bottom: 10px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+                padding: 10px;
+            }
+
+        .left-panel {
+            display: none;
+        }
+
+        .resDivButton {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .resContainer {
+            margin: 0px;
+            padding: 0px;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .left-panel {
+            display: none;
+        }
+
+        .ChatResponsive {
+            padding: 2px;
+            font-size: 20px;
+            justify-content: center;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .profile-photo {
+            width: 30px;
+            height: auto;
+        }
+
+        .userNameRes {
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .userNameResDiv {
+            width: 60%;
+            display: flex;
+            justify-content: center;
+            text-align: center;
+            align-items: center;
+        }
+
+        .profile-info {
+            width: 25%;
+        }
+
+        .sendButton {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 2px;
+        }
+
+        .resDivButton {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    }
+</style>
+
+<body>
+    <div class="container resContainer">
+        <div class="main-container">
+            <div class="container chat-container">
+                <div class="chat-header">
+                    <h1 class="text-center ChatResponsive">Chat Application</h1>
+                    <div class="settings-container">
+                        <button class="settings-button"><i class="fas fa-cog"></i> Settings</button>
+                        <div class="settings-dropdown">
+                            <ul>
+                                <li><a href="#">Account Settings</a></li>
+                                <li><a href="#">Privacy</a></li>
+                                <li><a href="#">Connections</a></li>
+                                <li><a href="@Url.Action("LogOut","Login")">Logout</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="profile-section">
+                        <img src="~/images/uploads/@Model.ProfilePictureURL" alt="Profile Photo" class="profile-photo" />
+                        <div class="userNameResDiv">
+                            <h3 class="userNameRes">@Model.UserName</h3>
+                        </div>
+                        <div class="profile-info">
+                            <span class="online-dot"></span>
+                            <span class="last-seen">Last seen: 5 minutes ago</span>
+                        </div>
+                    </div>
+
+                    @foreach (var Item in lstChatRecordwithConnections)
+                    {
+                        <div id="messagesHistoryList">
+                            @if (ViewBag.UserLoginID == @Item.ChatMessageID)
+                            {
+                                <div class="alignHistorySent">
+                                    <p class="message Historysent">@Item.ChatMessageData</p>
+
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alignHistoryRight">
+                                    <p class="message Historyreceived">
+                                        @Item.ChatMessageData
+                                    </p>
+                                </div>
+                            }
+                        </div>
+                    }
+                    <div id="messagesList">
+                        @* Dynamically Load the Message here. When User send the message and when User receive the Message *@
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <input type="hidden" id="recipientUserId" value="@Model.ChatMessageID" />
+                    <input type="text" id="messageInput" placeholder="Type your message..." class="MessageInput" />
+                    <div class="resDivButton">
+                        <button id="cameraButton"><img src="~/images/camera3.svg" alt="Camera" style="width:50px;" /></button>
+                        <button id="sendButton">Send</button>
+                    </div>
+                </div>
+            </div>
+            <div class="left-panel"></div>
+        </div>
+    </div>
+</body>
+<script src="~/js/signalr.js"></script>
+@* <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script> *@
+
+<script type="text/javascript">
+    //To create the Connection
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/chathub")
+        .build();
+
+    connection.start()
+        .then(function () {
+            console.log("Connected to SignalR hub");
+        })
+        .catch(function (err) {
+            console.error(err.toString());
+        });
+
+    const recipientUserIdInput = document.getElementById("recipientUserId");
+    //To send the Message.
+    document.getElementById("sendButton").addEventListener("click", function () {
+        const messageInput = document.getElementById("messageInput");
+        const message = messageInput.value;
+        const recipientUserId = recipientUserIdInput.value;
+
+        if (message && recipientUserId) {
+
+            connection.invoke("SendMessage", recipientUserId, message)
+                .catch(function (err) {
+                    console.error(err.toString());
+                });
+
+            const alignDiv = document.createElement('div');
+            alignDiv.classList.add('alignHistorySent');
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', 'sent');
+            msgDiv.innerHTML = `<p>${message}</p>`;
+            alignDiv.appendChild(msgDiv);
+            document.getElementById('messagesList').appendChild(alignDiv);
+            messageInput.value = '';
+        } else {
+            alert("Please enter a message.");
+        }
+    });
+
+
+    //To receive the Message
+    connection.on("ReceiveMessage", function (user, message) {
+        //console.log(user);
+        //console.log(message);
+
+        const msgDiv = document.createElement("div");
+        const alignDiv = document.createElement("div");
+        alignDiv.className = "alignHistoryRight";
+        msgDiv.className = "message received";
+        msgDiv.innerHTML = `<p>${message}</p>`;
+        alignDiv.appendChild(msgDiv);
+        document.getElementById("messagesList").appendChild(alignDiv);
+        toastr.success(`New message from ${user}`);
+    });
+
+
+
+    // To receive the notification
+    connection.on("ReceiveNotification", function (message) {
+        toastr.success(`New notification: ${message}`);
+    });
+
+</script>
