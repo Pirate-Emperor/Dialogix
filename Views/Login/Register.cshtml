@@ -1,0 +1,591 @@
+﻿@model Dialogix.Models.ChatUser
+
+
+@{
+    ViewData["Title"] = "Register";
+}
+
+@{
+    if (TempData["errorMessage"] != null)
+    {
+        <script>
+            toastr.error("@TempData["errorMessage"]");
+        </script>
+    }
+}
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body, html {
+        height: 100%;
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        display: flex;
+        flex-direction: row;
+        height: 100%;
+    }
+
+    .border-Danger {
+        border-color: red;
+    }
+
+    .cameraContainer {
+        text-align: center;
+        display: flex;
+        justify-content: center;
+    }
+
+    #my_camera {
+        max-width: 100%;
+    }
+
+    .cameraAlignCenter {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .formAlignCenter {
+        display: block;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .image-section {
+        width: 30%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f0f0f0;
+        background-size: cover;
+        background-position: center;
+    }
+
+    .registration-section {
+        width: 70%;
+        padding: 40px;
+        background-color: #fff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .responsive-image {
+        width: 100%;
+        height: auto;
+    }
+
+    .form-container {
+        width: 80%;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+        width: 100%;
+    }
+
+    .small-input {
+        height: 35px;
+    }
+
+    .text-muted {
+        font-size: 14px;
+    }
+
+    .btn {
+        margin-top: 10px;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+    }
+
+    .pictureContainer {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+    }
+
+
+    .containerBlockRepeat {
+        display: block;
+    }
+
+    .register-containerBlock {
+        display: none;
+    }
+    /* Responsive styles for smaller screens */
+    @@media (max-width: 1024px) {
+        .container {
+            flex-direction: column;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+        .image-section {
+            width: 100%;
+            padding: 20px;
+            height: 250px;
+        }
+
+        .registration-section {
+            width: 100%;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-container {
+            width: 100%;
+        }
+
+        .cameraContainer img,
+        #profilePicturePreview {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .btn-block {
+            width: auto;
+        }
+
+        h2.text-center {
+            font-size: 1.5em;
+        }
+    }
+
+    /* Responsive styles for tablets and very small screens */
+    @@media (max-width: 768px) {
+        .image-section {
+            display: none;
+        }
+
+
+        .container {
+            padding: 0px;
+            margin: 0px;
+        }
+
+        .registration-section {
+            width: 100%;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+        .form-container {
+            padding-left: 10px;
+            padding-right: 10px;
+            max-width: none;
+            width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        h2.text-center {
+            font-size: 1.3em;
+        }
+    }
+
+    /* Responsive styles for mobile */
+    @@media (max-width: 480px) {
+        .registration-section {
+            width: 100%;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        .form-container {
+            padding-left: 5px;
+            padding-right: 5px;
+            width: 100%;
+        }
+
+        .btn {
+            width: 100%;
+        }
+
+        h2.text-center {
+            font-size: 1.2em;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .cameraContainer {
+            flex-direction: column;
+            align-items: center;
+        }
+
+            .cameraContainer img {
+                max-width: 80%;
+            }
+    }
+</style>
+
+
+<body>
+    <div class="container" id="registerContainer">
+        <div class="image-section" style="background-image: url('../images/registerChat.svg');"></div>
+        <div class="registration-section">
+            <h2 class="text-center">Registration Form</h2>
+            <form asp-controller="Login" asp-action="Register" method="post" enctype="multipart/form-data" class="d-flex flex-column" onsubmit="return jsValidateSubmit();">
+                <div class="pictureContainer">
+                    <div class="profile-picture-container">
+                        <div class="cameraAlignCenter">
+                            <div id="my_camera" style="display:none;"></div>
+                        </div>
+                        <div class="cameraContainer">
+                            <a href="javascript:void(0)" id="captureProfileButton" onclick="toggleCamera()">
+                                <img src="~/images/camera-svgrepo-com.svg" style="height:50px;" />
+                            </a>
+                        </div>
+                        <div class="cameraContainer">
+                            <button type="button" class="btn btn-secondary mt-2" id="captureButton" style="display:none;" onclick="takeSnapshot()">Capture</button>
+                        </div>
+                        <div class="cameraContainer">
+                            <input type="hidden" asp-for="ProfilePictureURLCamera" id="ProfilePictureURLCamera">
+                        </div>
+                        <div class="cameraContainer">
+                            <input type="file" asp-for="ProfilePictureURL" accept="image" id="fileInput" onchange="loadFile(event)" style="display:none;">
+                            <button type="button" class="btn btn-secondary mt-2 small-input" onclick="document.getElementById('fileInput').click();">Select Profile Picture</button>
+                        </div>
+                        <div class="cameraContainer">
+                            <img id="profilePicturePreview" src="" class="profile-picture-preview mt-2" style="width:350px;height:auto">
+                        </div>
+                        <div class="cameraContainer">
+                            <small class="form-text text-muted text-center">Upload or capture a profile picture (optional).</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="pictureContainer">
+                    <div class="form-container">
+                        <div class="form-group formAlignCenter">
+                            <label for="username" class="text-muted">Username</label>
+                            <input asp-for="UserName" class="form-control small-input" type="text" id="username" name="username" />
+                        </div>
+                        <div class="form-group formAlignCenter">
+                            <label for="FullName" class="text-muted">Full Name</label>
+                            <input asp-for="FullName" class="form-control small-input" type="text" id="fullname" name="fullname" />
+                        </div>
+                        <div class="form-group formAlignCenter">
+                            <label for="email" class="text-muted">Email</label>
+                            <input asp-for="Email" class="form-control small-input" type="email" id="email" name="email" />
+                        </div>
+                        <div class="form-group formAlignCenter">
+                            <label for="Gender" class="text-muted">Gender</label>
+                            <select asp-for="Gender" class="form-control small-input" id="Gender">
+                                <option value="0">Select Gender</option>
+                                @foreach (var item in Enum.GetValues(typeof(Dialogix.Models.ChatUser.GenderType)))
+                                {
+                                    <option value="@item">@item</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group formAlignCenter">
+                            <label for="password" class="text-muted">Password</label>
+                            <input asp-for="Password" class="form-control small-input" type="password" id="password" name="password" />
+                        </div>
+                        <div class="form-group formAlignCenter">
+                            <label for="ConfirmPassword" class="text-muted">Confirm Password</label>
+                            <input asp-for="ConfirmPassword" class="form-control small-input" type="password" id="confirmPassword" name="ConfirmPassword" />
+                        </div>
+                        <input type="hidden" asp-for="Longitude" id="Longitude" value="" />
+                        <input type="hidden" asp-for="Latitude" id="Latitude" value="" />
+                        <input type="hidden" asp-for="TermsCondition" id="TermsCondition" value="" />
+                        <input type="hidden" asp-for="FCMToken" id="FCMToken">
+                        <div class="form-group formAlignCenter">
+                            <a href="JavaScript:Void()" class="" onclick="js_TermsandCondition();">Terms and Condition.</a><span>(Please read carefully)</span>
+                            <br />
+                            <button type="submit" class="btn btn-primary btn-block mt-auto small-input">Sign In</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="termsConditionContainer" style="display: none;">
+        <!-- Partial View content will be injected here -->
+    </div>
+</body>
+
+
+<script src="~/js/webcam.min.js"></script>
+@* <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js" defer></script>
+ <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging.js" defer></script>*@
+
+<script type="text/javascript">
+
+
+    Webcam.set({
+        width: 320,
+        height: 240,
+        image_format: 'jpeg',
+        jpeg_quality: 90
+    });
+
+    function toggleCamera() {
+        const cameraDiv = document.getElementById('my_camera');
+        document.getElementById('captureProfileButton').style.display = 'none';
+        if (cameraDiv.style.display === 'none') {
+            cameraDiv.style.display = 'block';
+            Webcam.attach(cameraDiv);
+            document.getElementById('captureButton').style.display = 'block';
+            document.getElementById('profilePicturePreview').style.display = 'none';
+        } else {
+            cameraDiv.style.display = 'none';
+            Webcam.reset();
+            document.getElementById('captureButton').style.display = 'none';
+        }
+    }
+
+    function takeSnapshot() {
+        Webcam.snap(function (data_uri) {
+
+            document.getElementById('ProfilePictureURLCamera').value = data_uri;
+
+            document.getElementById('profilePicturePreview').src = data_uri;
+
+            document.getElementById('profilePicturePreview').style.display = 'block';
+
+            document.getElementById('my_camera').style.display = 'none';
+            Webcam.reset();
+            document.getElementById('captureButton').style.display = 'none';
+            document.getElementById('captureProfileButton').style.display = 'block';
+        });
+    }
+
+    function loadFile(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('profilePicturePreview').src = e.target.result;
+                document.getElementById('profilePicturePreview').style.display = 'block';
+                document.getElementById('my_camera').style.display = 'none';
+                Webcam.reset();
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function geoLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition, showError, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            });
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    }
+
+    function showPosition(position) {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+
+        document.getElementById("Latitude").value = latitude;
+        document.getElementById("Longitude").value = longitude;
+
+        console.log("Latitude: " + latitude + ", Longitude: " + longitude);
+    }
+
+    function showError(error) {
+        switch (error.code) {
+            case error.PERMISSION_DENIED:
+                alert("User denied the request for Geolocation.");
+                break;
+            case error.POSITION_UNAVAILABLE:
+                alert("Location information is unavailable.");
+                break;
+            case error.TIMEOUT:
+                alert("The request to get user location timed out.");
+                break;
+            case error.UNKNOWN_ERROR:
+                alert("An unknown error occurred.");
+                break;
+        }
+    }
+    window.onload = geoLocation;
+
+    async function jsValidateSubmit() {
+        // Get form values
+
+        var username = $("#username").val().trim();
+        var email = $("#email").val().trim();
+        var password = $("#password").val().trim();
+        var fullName = $("#fullname").val().trim();
+        var confirmPassword = $("#confirmPassword").val().trim();
+        var gender = $("#Gender").val();
+        var termsCondition = $("#TermsCondition").val();
+
+        // Regular expression for password validation
+        var passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+
+        // Validation checks
+        if (!username) {
+            $("#username").addClass("border-Danger");
+            toastr.error("Please enter the Username");
+            return false;
+        } else {
+            $("#username").removeClass("border-Danger");
+        }
+
+        if (!fullName) {
+            $("#fullname").addClass("border-Danger");
+            toastr.error("Please enter the Full Name");
+            return false;
+        } else {
+            $("#fullname").removeClass("border-Danger");
+        }
+
+        if (!email) {
+            toastr.error("Please enter the Email");
+            $("#email").addClass("border-Danger");
+            return false;
+        } else {
+            $("#email").removeClass("border-Danger");
+        }
+
+        if (gender === "0" || gender === null) {
+            toastr.error("Please select a Gender");
+            $("#Gender").addClass("border-Danger");
+            return false;
+        } else {
+            $("#Gender").removeClass("border-Danger");
+        }
+
+        if (!passwordRegex.test(password)) {
+            toastr.error("Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character.");
+            $("#password").addClass("border-Danger");
+            return false;
+        } else {
+            $("#password").removeClass("border-Danger");
+        }
+
+        if (!confirmPassword) {
+            toastr.error("Please enter the Confirm Password");
+            $("#confirmPassword").addClass("border-Danger");
+            return false;
+        } else {
+            $("#confirmPassword").removeClass("border-Danger");
+        }
+
+        if (password !== confirmPassword) {
+            toastr.error("Password and Confirm Password must be the same");
+            return false;
+        }
+
+        if (termsCondition === false || termsCondition === "") {
+            toastr.error("Please read the Terms and Condition");
+            return false;
+        }
+
+        requestNotificationPermission();
+
+        return true; // Return true to allow form submission
+    }
+
+    function js_TermsandCondition() {
+
+        var termsValue = document.getElementById("TermsCondition").value;
+        var termsValueCheck = "";
+        $("#registerContainer").css("display", "none");
+        if (termsValue == "true") {
+            termsValueCheck = termsValue;
+            $("#registerContainer").hide();
+            $("#registerContainer").addClass("containerBlockRepeat");
+        } else {
+            termsValueCheck = "false";
+        }
+        $("#registerContainer").css("display", "none");
+        $.ajax({
+            url: "@Url.Action("_partialTermsCondition", "Login")",
+            type: "GET",
+            data: { termsValueCheck: termsValueCheck },
+            cache: false,
+            success: function (res) {
+                //$("#registerContainer").addClass("register-containerBlock");
+                //$("#registerContainer").css("display", "block");
+                $("#termsConditionContainer").html(res).slideDown();
+                document.getElementById("TermsCondition").value = true;
+            }
+        })
+
+    }
+
+</script>
+
+
+<script type="module">
+    
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging.js";
+
+    // Firebase configuration object
+    const firebaseConfig = {
+        apiKey: "AIzaSyBIWES3c3n3-JXMAwSfp1bNZQ6oZ3yQGyc",
+        authDomain: "dialogix-trilok.firebaseapp.com",
+        projectId: "dialogix-trilok",
+        storageBucket: "dialogix-trilok.appspot.com",
+        messagingSenderId: "965800671505",
+        appId: "1:965800671505:web:3f3238b4bf441f8708f4b0",
+        measurementId: "G-LCJX2K7LR6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const messaging = getMessaging(app);
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/firebase-messaging-sw.js')
+            .then((registration) => {
+                console.log('Service Worker registered with scope:', registration.scope);
+            })
+            .catch((error) => {
+                console.error('Service Worker registration failed:', error);
+            });
+    }
+
+    
+    async function requestNotificationPermission() {
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+              
+                // const currentToken = await getToken(messaging, { vapidKey: "BDdcrVCClOEYjV0Cfn6MeKext7zv8tYhs4Gc8Y5X7MthCId0ccJIvCifrPtNfllC5j-qVM_rMc4l7byyq8E6ZvE" });
+                // if (currentToken) {
+                //     await deleteToken(messaging);
+                //     console.log('Existing FCM token deleted.');
+                // }
+
+               
+                const newToken = await getToken(messaging, { vapidKey: "BDdcrVCClOEYjV0Cfn6MeKext7zv8tYhs4Gc8Y5X7MthCId0ccJIvCifrPtNfllC5j-qVM_rMc4l7byyq8E6ZvE" });
+                if (newToken) {
+                    console.log('New FCM Token:', newToken);
+                    document.getElementById("FCMToken").value = newToken;
+                    
+                } else {
+                    console.log('No new registration token available.');
+                }
+            } else {
+                console.log('Notification permission not granted.');
+            }
+        } catch (err) {
+            console.error('Error getting FCM token: ', err);
+        }
+    }
+
+    requestNotificationPermission();
+</script>
